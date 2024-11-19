@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MR.B3ALBAKI Trading Terminal</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+          body {
+              margin: 0;
+              overflow: hidden;
+              font-family: 'Orbitron', sans-serif;
+              background: #0a0f1c;
+          }
+
+          #canvas-container {
+              position: fixed;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
+              z-index: -1;
+          }
+
+          .market-stream {
+              position: fixed;
+              top: 0;
+              width: 100%;
+              padding: 10px;
+              background: rgba(0, 20, 40, 0.5);
+              color: #0ff;
+              font-size: 0.9em;
+              white-space: nowrap;
+              overflow: hidden;
+              backdrop-filter: blur(5px);
+          }
+
+          .ticker {
+              display: inline-block;
+              margin: 0 20px;
+              padding: 5px 10px;
+              border-radius: 4px;
+              background: rgba(0, 255, 255, 0.1);
+          }
+
+          .login-container {
+              position: fixed;
+              top: 50%;
+              left: 50%;
+              transform: translate(-50%, -50%);
+              background: rgba(0, 20, 40, 0.8);
+              padding: 40px;
+              border-radius: 20px;
+              border: 2px solid #0ff;
+              width: 400px;
+              backdrop-filter: blur(10px);
+              box-shadow: 0 0 50px rgba(0, 255, 255, 0.2);
+              z-index: 100;
+          }
+
+          .login-header {
+              text-align: center;
+              color: #0ff;
+              margin-bottom: 30px;
+          }
+
+          .terminal-text {
+              font-family: 'Courier New', monospace;
+              color: #0f0;
+              margin: 20px 0;
+              line-height: 1.5;
+          }
+
+          input {
+              width: 100%;
+              padding: 12px;
+              margin: 10px 0;
+              background: rgba(0, 0, 0, 0.5);
+              border: 1px solid #0ff;
+              color: #0ff;
+              border-radius: 8px;
+          }
+
+          button {
+              width: 100%;
+              padding: 15px;
+              background: linear-gradient(90deg, #0ff, #00a3ff);
+              color: #000;
+              border: none;
+              border-radius: 8px;
+              font-weight: bold;
+              cursor: pointer;
+              margin-top: 20px;
+              text-transform: uppercase;
+              letter-spacing: 2px;
+          }
+
+          .up { color: #00ff00; }
+          .down { color: #ff0000; }
+
+          .market-grid {
+              position: fixed;
+              bottom: 0;
+              width: 100%;
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+              gap: 10px;
+              padding: 20px;
+              background: rgba(0, 20, 40, 0.3);
+              backdrop-filter: blur(5px);
+          }
+
+          .market-card {
+              background: rgba(0, 20, 40, 0.6);
+              padding: 15px;
+              border-radius: 10px;
+              border: 1px solid rgba(0, 255, 255, 0.2);
+          }
+        .trading-symbol {
+            position: absolute;
+            color: #0ff;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            animation: floatUp 3s linear forwards;
+        }
+
+        .buy { color: #00ff00; }
+        .sell { color: #ff0000; }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 0;
+                transform: translateY(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100vh);
+            }
+        }
+
+        .candlestick {
+            position: absolute;
+            width: 4px;
+            background: #0ff;
+            transform-origin: bottom;
+            animation: grow 2s ease-out forwards;
+        }
+
+        @keyframes grow {
+            from { transform: scaleY(0); }
+            to { transform: scaleY(1); }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+
+    <div class="market-stream" id="marketStream"></div>
+
+    <div class="login-container">
+        <div class="login-header">
+            <h2>MR.B3ALBAKI TRADING TERMINAL</h2>
+            <div class="terminal-text">
+                > Initializing secure connection...<br>
+                > Markets synchronized: XAUUSD, EURUSD, BTCUSD<br>
+                > System ready for authentication
+            </div>
+        </div>
+        <form id="loginForm">
+            <input type="text" placeholder="TRADER ID" required>
+            <input type="password" placeholder="ACCESS KEY" required>
+            <button type="submit">INITIALIZE SESSION</button>
+        </form>
+    </div>
+    <div class="market-grid" id="marketGrid"></div>
+
+    <script>
+        // Three.js 3D Animation
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // Create animated particles
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 5000;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for(let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 5;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.005,
+            color: '#00ffff'
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+        camera.position.z = 2;
+
+        // Market Data
+        const markets = [
+            { symbol: 'XAUUSD', price: 1950.42, change: '+0.25%' },
+            { symbol: 'EURUSD', price: 1.0892, change: '-0.12%' },
+            { symbol: 'BTCUSD', price: 43250.00, change: '+1.45%' },
+            { symbol: 'GBPUSD', price: 1.2654, change: '+0.08%' },
+            { symbol: 'US30', price: 38750.00, change: '-0.32%' },
+            { symbol: 'USOIL', price: 82.45, change: '+0.75%' }
+        ];
+
+        // Update market data
+        function updateMarkets() {
+            markets.forEach(market => {
+                market.price += (Math.random() - 0.5) * 5;
+                market.change = ((Math.random() - 0.5) * 2).toFixed(2) + '%';
+            });
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            const stream = document.getElementById('marketStream');
+            stream.innerHTML = markets.map(market => 
+                `<div class="ticker">${market.symbol}: ${market.price.toFixed(2)} (${market.change})</div>`
+            ).join('');
+        }
+
+        // Trading background animations
+        function createTradingSymbol() {
+            const symbols = ['XAUUSD', 'EURUSD', 'BTCUSD', 'GBPUSD', 'US30'];
+            const actions = ['BUY', 'SELL'];
+          
+            const element = document.createElement('div');
+            const symbol = symbols[Math.floor(Math.random() * symbols.length)];
+            const action = actions[Math.floor(Math.random() * actions.length)];
+          
+            element.className = `trading-symbol ${action.toLowerCase()}`;
+            element.textContent = `${action} ${symbol} @${Math.random().toFixed(4)}`;
+            element.style.left = `${Math.random() * 90}vw`;
+            element.style.top = `${Math.random() * 90}vh`;
+          
+            document.body.appendChild(element);
+            setTimeout(() => element.remove(), 3000);
+        }
+
+        function createCandlestick() {
+            const candle = document.createElement('div');
+            candle.className = 'candlestick';
+            candle.style.left = `${Math.random() * 90}vw`;
+            candle.style.bottom = '0';
+            candle.style.height = `${Math.random() * 200 + 50}px`;
+            candle.style.background = Math.random() > 0.5 ? '#00ff00' : '#ff0000';
+          
+            document.body.appendChild(candle);
+            setTimeout(() => candle.remove(), 2000);
+        }
+
+        // Enhanced particle system for market visualization
+        function createMarketParticles() {
+            const particlesCount = 1000;
+            const positions = new Float32Array(particlesCount * 3);
+            const colors = new Float32Array(particlesCount * 3);
+          
+            for(let i = 0; i < particlesCount; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 10;
+                positions[i * 3 + 1] = (Math.random() - 0.5) * 10;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 10;
+
+                // Green for buy, red for sell particles
+                const color = Math.random() > 0.5 ? [0, 1, 0] : [1, 0, 0];
+                colors[i * 3] = color[0];
+                colors[i * 3 + 1] = color[1];
+                colors[i * 3 + 2] = color[2];
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.05,
+                vertexColors: true,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // Initialize enhanced scene
+        const marketParticles = createMarketParticles();
+        scene.add(marketParticles);
+
+        // Animation loop with trading effects
+        function animate() {
+            requestAnimationFrame(animate);
+          
+            marketParticles.rotation.x += 0.001;
+            marketParticles.rotation.y += 0.002;
+
+            if(Math.random() > 0.95) createTradingSymbol();
+            if(Math.random() > 0.97) createCandlestick();
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+        setInterval(updateMarkets, 1000);
+        updateDisplay();
+
+        // Generate trading symbols and candlesticks periodically
+        setInterval(createTradingSymbol, 500);
+        setInterval(createCandlestick, 1000);
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
