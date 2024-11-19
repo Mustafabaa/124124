@@ -1,0 +1,160 @@
+    :root {
+        --neon-green: #0f0;
+        --dark-bg: #000;
+        --error-red: #ff0033;
+        --warning-yellow: #ffcc00;
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: 'Courier New', monospace;
+        background: var(--dark-bg);
+        color: var(--neon-green);
+        overflow: hidden;
+        cursor: crosshair;
+    }
+
+    #matrix-rain {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .login-container {
+        position: relative;
+        z-index: 2;
+        max-width: 450px;
+        margin: 50px auto;
+        padding: 30px;
+        background: rgba(0, 0, 0, 0.9);
+        border: 1px solid var(--neon-green);
+        box-shadow: 0 0 30px rgba(0, 255, 0, 0.2);
+        animation: pulse 2s infinite;
+    }
+
+    .glitch-text {
+        font-size: 2.5em;
+        text-align: center;
+        margin-bottom: 30px;
+        font-family: 'Courier New', monospace;
+        text-transform: uppercase;
+        text-shadow: 
+            2px 2px var(--error-red),
+            -2px -2px var(--warning-yellow);
+        animation: textGlitch 0.5s infinite;
+    }
+
+    .input-group {
+        position: relative;
+        margin-bottom: 35px;
+    }
+
+    input {
+        width: 100%;
+        padding: 15px;
+        background: rgba(0, 20, 0, 0.3);
+        border: 1px solid var(--neon-green);
+        color: var(--neon-green);
+        font-family: 'Courier New', monospace;
+        font-size: 16px;
+        letter-spacing: 2px;
+        box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+    }
+
+    input:focus {
+        outline: none;
+        border-color: #fff;
+        box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    }
+
+    label {
+        position: absolute;
+        top: -25px;
+        left: 0;
+        color: var(--neon-green);
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+        text-shadow: 0 0 5px var(--neon-green);
+    }
+
+    .hack-button {
+        width: 100%;
+        padding: 20px;
+        background: rgba(0, 20, 0, 0.5);
+        border: 2px solid var(--neon-green);
+        color: var(--neon-green);
+        font-size: 18px;
+        text-transform: uppercase;
+        letter-spacing: 4px;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s;
+    }
+
+    .hack-button:hover {
+        background: var(--neon-green);
+        color: var(--dark-bg);
+        box-shadow: 0 0 30px var(--neon-green);
+    }
+
+    .warning-text {
+        color: var(--warning-yellow);
+        font-size: 12px;
+        text-align: center;
+        margin-top: 20px;
+        animation: blink 1s infinite;
+    }
+
+    .stock-ticker {
+        margin-top: 30px;
+        border-top: 1px solid var(--neon-green);
+        padding-top: 15px;
+        font-family: 'Courier New', monospace;
+    }
+
+    .ticker-item {
+        display: inline-block;
+        margin-right: 20px;
+        padding: 5px 10px;
+        background: rgba(0, 20, 0, 0.3);
+        border: 1px solid var(--neon-green);
+    }
+
+    @keyframes textGlitch {
+        0% { transform: translate(0); }
+        20% { transform: translate(-2px, 2px); }
+        40% { transform: translate(-2px, -2px); }
+        60% { transform: translate(2px, 2px); }
+        80% { transform: translate(2px, -2px); }
+        100% { transform: translate(0); }
+    }
+
+    @keyframes pulse {
+        0% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); }
+        50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.5); }
+        100% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.2); }
+    }
+
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+
+    @media (max-width: 480px) {
+        .container {
+            width: 90%;
+            height: 450px;
+        }
+
+        .login-form {
+            width: 90%;
+            padding: 20px;
+        }
+    }
